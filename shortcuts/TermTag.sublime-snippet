@@ -1,9 +1,26 @@
 <snippet>
 	<content><![CDATA[
-<term cond="${1}">${2}</term>
-]]></content>
+|-option1
+|--option2
+|--option3
+|--option4
+|--option5
+|--option6
+|-option7
+|--option8
+|--option9
+|---option10
+|---option11
+|---option12
+|---option13
+|---option14
+|---option15
+|---option16
+|----option17
+|----option18
+|----option19]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
-	<tabTrigger>term</tabTrigger>
+	<tabTrigger>option1</tabTrigger>
 	<!-- Optional: Set a scope to limit where the snippet will trigger -->
 	<scope>text.xml</scope>
 </snippet>

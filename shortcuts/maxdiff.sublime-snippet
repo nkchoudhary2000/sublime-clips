@@ -1,9 +1,7 @@
 <snippet>
-	<content><![CDATA[
-<quota label="${1}" overquota="noqual" sheet="${2}"/>
-]]></content>
+	<content>[str]QLabel-[int]QRange-[int]QLoopCount-[int]QAttrib</content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
-	<tabTrigger>quota</tabTrigger>
+	<tabTrigger>md</tabTrigger>
 	<!-- Optional: Set a scope to limit where the snippet will trigger -->
 	<scope>text.xml</scope>
 </snippet>
