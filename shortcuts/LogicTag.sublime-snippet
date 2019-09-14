@@ -1,0 +1,20 @@
+<snippet>
+	<content><![CDATA[
+<logic label="${1}" dmarker:code="${2}" dmarker:format="custom" uses="dmarker.1"/>
+<!-- CODE
+	%y:	Year without century as a decimal number [00,99].
+	%d:	Day of the month as a decimal number [01,31].
+	%H:	Hour (24-hour clock) as a decimal number [00,23].
+	%I:	Hour (12-hour clock) as a decimal number [01,12].
+	%j:	Day of the year as a decimal number [001,366].
+	%m:	Month as a decimal number [01,12].
+	%M:	Minute as a decimal number [00,59].
+	%p:	Locale’s equivalent of either AM or PM.
+	%S:	Second as a decimal number [00,61].
+-->
+	]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>logic</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>text.xml</scope>
+</snippet>
