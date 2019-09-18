@@ -49,10 +49,19 @@ class ListGenerator(sublime_plugin.TextCommand):
 
 class UpperCaseGenerator(sublime_plugin.TextCommand):
 	def run(self, edit):
+		first_line = self.view.substr(self.view.sel()[0]).split('\"')
+		if first_line[0].isdigit():
+			counter = int(first_line[0]) - 1
 		for sel in self.view.sel():
 			input = self.view.substr(sel)
-			input = input.upper()
-			self.view.replace(edit,sel,input)
+
+			if first_line[0].isdigit():
+				counter += 1
+				input = str(counter)
+				self.view.replace(edit,sel,input)
+			else:
+				input = input.upper()
+				self.view.replace(edit,sel,input)
 
 
 #==============================
@@ -61,10 +70,21 @@ class UpperCaseGenerator(sublime_plugin.TextCommand):
 
 class LowerCaseGenerator(sublime_plugin.TextCommand):
 	def run(self, edit):
+		first_line = self.view.substr(self.view.sel()[0]).split('\"')
+		if first_line[0].isdigit():
+			counter = int(first_line[0]) + 1
 		for sel in self.view.sel():
 			input = self.view.substr(sel)
-			input = input.lower()
-			self.view.replace(edit,sel,input)
+
+			if first_line[0].isdigit():
+				counter -= 1
+				input = str(counter)
+				self.view.replace(edit,sel,input)
+			else:
+				input = input.lower()
+				self.view.replace(edit,sel,input)
+
+
 
 
 
