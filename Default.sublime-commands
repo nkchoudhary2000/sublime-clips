@@ -103,6 +103,10 @@
       "command": "reverse_order"
     },
     {
+      "caption": "MM::Make DCM",
+      "command": "make_dcm"
+    },
+    {
       "caption": "MM::Split Question",
       "command": "split_question"
     },
@@ -113,6 +117,10 @@
     {
       "caption": "MM::List",
       "command": "make_list"
+    },
+    {
+      "caption": "MM::Custom",
+      "command": "custom"
     },
     {
       "caption": "MM::Clean",
@@ -153,6 +161,10 @@
     {
       "caption": "MM::Bold Text",
       "command": "bold_text"
-    }
-]
+    },
+    {
+      "caption": "MM::Custom Test",
+      "command": "custom"
+    },
+]       
 

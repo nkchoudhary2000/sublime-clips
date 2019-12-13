@@ -50,7 +50,7 @@ def tidyQuestionInput(input):
     return [input, label, title]
 
 def tidySurveyInput(input):
-    input = unicode(input, 'utf-8')
+    # input = input.encode()
     input = re.sub("\t+", " ", input)
     input = re.sub("\n +\n", "\n\n", input)
     funkyChars = [(chr(133),'...'),(chr(145),"'"),(chr(146),"'"),(chr(147),'"'),(chr(148),'"'),(chr(151),'--')]
@@ -59,6 +59,8 @@ def tidySurveyInput(input):
     input = re.sub("\n{3,}", "\n\n", input)
     input = input.replace("&", "&amp;")
     input = input.replace("&amp;#", "&#")
+    input = input.replace("amp;amp;", "amp;")
+    
     return input
 
 # normal survey return array header & footer
@@ -378,7 +380,7 @@ def newSurveyGMI():
 
 def fixUniCode(input):
     input = input.replace(u"\u2019", "'").replace(u"\u2018", "'").replace(u"\u201C", "\"").replace(u"\u201D", "\"")
-    input = re.sub('&\s', '&amp; ',input)
+    input = re.sub('&\s', '&amp; ',input) 
     return input
 
 
@@ -448,7 +450,10 @@ class makeSurveyCommand(sublime_plugin.TextCommand):
             print ('could not create survey layout~')
             print (e)
 
+
+
 ################# Question types
+
 class makeRadioCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         try:
@@ -458,7 +463,7 @@ class makeRadioCommand(sublime_plugin.TextCommand):
 
             for sel in sels:
                 printPage = ''
-                input = self.view.substr(sel)
+                input = self.view.substr(sel)       
                 inputLabelTitle = tidyQuestionInput(input)
                 input = inputLabelTitle[0]
                 label = inputLabelTitle[1]
@@ -472,9 +477,7 @@ class makeRadioCommand(sublime_plugin.TextCommand):
                 #test for and adjust comment for 2d question
                 if output.strip() == '':
                     printpage = printPage = """
-<radio
-  label=\"%s\"
-  where="execute">
+<radio label=\"%s\" where="execute">
   <title>%s</title>
   <row label="r1" value="1">True</row>
   <row label="r0" value="0">False</row>
@@ -491,39 +494,41 @@ class makeRadioCommand(sublime_plugin.TextCommand):
 
                 # compose our new radio question
                 if docType == 'FMA':
-                    printPage = "<radio\n  label=\"%s\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), title.strip(), output)
+                    printPage = "<radio label=\"%s\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), title.strip(), output)
                 elif docType == 'HAP':
 
                     rowlegend = ""
 
                     if ("<row" in output) and not ("<col" in output):
-                        rowlegend='\n  rowLegend=\"right\"'
+                        rowlegend=' rowLegend=\"right\"'
                         print ('add row legend!!!!!!')
                     # compose our new radio question
                     if "<comment>" not in input:
-                      printPage = "<radio\n  label=\"%s\"%s>\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), comment, output)
+                      printPage = "<radio label=\"%s\"%s>\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), comment, output)
                     else:
-                      printPage = "<radio\n  label=\"%s\"%s>\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), output)
+                      printPage = "<radio label=\"%s\"%s>\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), output)
                 elif docType == 'CMB':
                         if (("<row" in output) and ("<col" in output) and (colCount > 1)) or not ("<row" in output):
                             style = ''
                         else:
-                            style = '\n  style=\"noGrid\"\n  ss:questionClassNames=\"flexGrid\"'
+                            style = ' style=\"noGrid\" ss:questionClassNames=\"flexGrid\"'
 
                         # compose our new radio question
                         if "<comment>" not in input:
-                          printPage = "<radio\n  label=\"%s\"%s>\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), style, title.strip(), comment, output)
+                          printPage = "<radio label=\"%s\"%s>\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), style, title.strip(), comment, output)
                         else:
-                          printPage = "<radio\n  label=\"%s\"%s>\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), style, title.strip(), output)
+                          printPage = "<radio label=\"%s\"%s>\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), style, title.strip(), output)
 
                 else:
                     if "<comment>" not in input:
-                      printPage = "<radio\n  label=\"%s\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
+                      printPage = "<radio label=\"%s\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
                     else:
-                      printPage = "<radio\n  label=\"%s\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), title.strip(), output)
+                      printPage = "<radio label=\"%s\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), title.strip(), output)
 
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
+
         except Exception as e:
             print ("makeRadio clip failed:")
             print (e)
@@ -552,7 +557,7 @@ class makeRatingCommand(sublime_plugin.TextCommand):
                 style = ""
                 comment = ''
                 if docType == 'FMA':
-                    printPage = "<radio\n  label=\"%s%s%s\"\n  type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
+                    printPage = "<radio label=\"%s%s%s\" type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
 
                 elif docType == 'HAP':
                     #DETERMINE IF WE NEED A 1D OR 2D COMMENT, SHUFFLE 2D ROWS OR COLS, ADD AVERAGES attribute.
@@ -562,21 +567,21 @@ class makeRatingCommand(sublime_plugin.TextCommand):
                         for x in s:
                             if x.count("value=") > 0:
                                 if x.count("<col") > 0:
-                                    shffl = "\n  shuffle=\"rows\""
+                                    shffl = " shuffle=\"rows\""
                                 elif x.count("<row") > 0:
-                                    shffl = "\n  shuffle=\"cols\""
+                                    shffl = " shuffle=\"cols\""
                     else:
                         comment = "<comment>Select one</comment>\n"
 
                     rowlegend=""
 
                     if ("<row" in output) and not ("<col" in output):
-                        rowlegend='\n  rowLegend=\"right\"'
+                        rowlegend=' rowLegend=\"right\"'
 
                     if "<comment>" not in input:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\"%s>\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, shffl, style, title.strip(), comment, output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\"%s>\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, shffl, style, title.strip(), comment, output)
                     else:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\"%s>\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, shffl, style, title.strip(), output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\"%s>\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), rowlegend, shffl, style, title.strip(), output)
 
                 elif docType == 'CMB':
 
@@ -586,21 +591,21 @@ class makeRatingCommand(sublime_plugin.TextCommand):
                         for x in s:
                             if x.count("value=") > 0:
                                 if x.count("<col") > 0:
-                                    shffl = "\n  shuffle=\"rows\""
+                                    shffl = " shuffle=\"rows\""
                                 elif x.count("<row") > 0:
-                                    shffl = "\n  shuffle=\"cols\""
+                                    shffl = " shuffle=\"cols\""
                     else:
                         comment = "<comment>Select one</comment>\n"
 
                     if (("<row" in output) and ("<col" in output) and (colCount > 1)) or not ("<row" in output):
                         style = ''
                     else:
-                        style = '\n  style=\"noGrid\" ss:questionClassNames=\"flexGrid\"'
+                        style = ' style=\"noGrid\" ss:questionClassNames=\"flexGrid\"'
 
                     if "<comment>" not in input:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), comment, output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), comment, output)
                     else:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
                 elif docType == 'SRG':
 
                     if (("row" in output) or ("rows" in output)) and (("col" in output) or ("cols" in output)):
@@ -609,16 +614,16 @@ class makeRatingCommand(sublime_plugin.TextCommand):
                         for x in s:
                             if x.count("value=") > 0:
                                 if x.count("<col") > 0:
-                                    shffl = "\n  shuffle=\"rows\""
+                                    shffl = " shuffle=\"rows\""
                                 elif x.count("<row") > 0:
-                                    shffl = "\n  shuffle=\"cols\""
+                                    shffl = " shuffle=\"cols\""
                     else:
                         comment = "<comment>Please select one</comment>\n"
 
                     if "<comment>" not in input:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), comment, output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), comment, output)
                     else:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
 
 
                 else:
@@ -629,18 +634,19 @@ class makeRatingCommand(sublime_plugin.TextCommand):
                         for x in s:
                             if x.count("value=") > 0:
                                 if x.count("<col") > 0:
-                                    shffl = "\n  shuffle=\"rows\""
+                                    shffl = " shuffle=\"rows\""
                                 elif x.count("<row") > 0:
-                                    shffl = "\n  shuffle=\"cols\""
+                                    shffl = " shuffle=\"cols\""
                     else:
                         comment = "<comment>Select one</comment>\n"
 
                     if "<comment>" not in input:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), comment, output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\">\n  <title>%s</title>\n  %s  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), comment, output)
                     else:
-                        printPage = "<radio\n  label=\"%s\"%s%s\n  type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
+                        printPage = "<radio label=\"%s\"%s%s type=\"rating\">\n  <title>%s</title>\n  %s\n</radio>\n<suspend/>" % (label.strip(), shffl, style, title.strip(), output)
 
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print ("makeRating clip failed:")
@@ -695,45 +701,46 @@ class makeCheckboxCommand(sublime_plugin.TextCommand):
                     if ("<row" in output) and ("<col" in output) and (colCount > 1):
                         style = ''
                     else:
-                        style = '\n  style=\"noGrid\"\n  ss:questionClassNames=\"flexGrid\"'
+                        style = ' style=\"noGrid\" ss:questionClassNames=\"flexGrid\"'
 
                     # compose the question
                     if "<comment>" not in input:
-                        printPage = "<checkbox\n  label=\"%s\"%s\n  atleast=\"1\">\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), style, title.strip(), comment, output)
+                        printPage = "<checkbox label=\"%s\"%s atleast=\"1\">\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), style, title.strip(), comment, output)
                     else:
-                        printPage = "<checkbox\n  label=\"%s\"%s\n  atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), style, title.strip(), output)
+                        printPage = "<checkbox label=\"%s\"%s atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), style, title.strip(), output)
 
                 elif docType =='HAP':
                     comment = "<comment>Select all that apply</comment>\n"
                     rowlegend=""
 
                     if ("<row" in output) and not ("<col" in output):
-                        rowlegend ='\n  rowLegend=\"right\"'
+                        rowlegend =' rowLegend=\"right\"'
                         # compose the question
                     if "<comment>" not in input:
-                            printPage = "<checkbox\n  label=\"%s\"\n  atleast=\"1\"%s>\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), comment, output)
+                            printPage = "<checkbox label=\"%s\" atleast=\"1\"%s>\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), comment, output)
                     else:
-                            printPage = "<checkbox\n  label=\"%s\"\n  atleast=\"1\"%s>\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), output)
+                            printPage = "<checkbox label=\"%s\" atleast=\"1\"%s>\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), rowlegend, title.strip(), output)
 
 
                 elif docType =='FMA':
                     # compose the question
-                    printPage = "<checkbox\n  label=\"%s\"\n  atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), output)
+                    printPage = "<checkbox label=\"%s\" atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), output)
                 elif docType =='SRG':
                         comment = "<comment>Please select all that apply</comment>\n"
                         # compose the question
                         if "<comment>" not in input:
-                            printPage = "<checkbox\n  label=\"%s\"\n  atleast=\"1\">\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
+                            printPage = "<checkbox label=\"%s\" atleast=\"1\">\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
                         else:
-                            printPage = "<checkbox\n  label=\"%s\"\n  atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), output)
+                            printPage = "<checkbox label=\"%s\" atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), output)
                 else:
                         # set the appropriate comment
                     comment = "<comment>Select all that apply</comment>\n"
                     # compose the question
                     if "<comment>" not in input:
-                        printPage = "<checkbox\n  label=\"%s\"\n  atleast=\"1\">\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
+                        printPage = "<checkbox label=\"%s\" atleast=\"1\">\n  <title>%s</title>\n  %s  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
                     else:
-                        printPage = "<checkbox\n  label=\"%s\"\n  atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), output)
+                        printPage = "<checkbox label=\"%s\" atleast=\"1\">\n  <title>%s</title>\n  %s\n</checkbox>\n<suspend/>" % (label.strip(), title.strip(), output)
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print (e)
@@ -757,8 +764,9 @@ class makeSelectCommand(sublime_plugin.TextCommand):
                 output = "\n  " + input
 
                 # compose the select question
-                printPage = "<select\n  label=\"%s\"\n  optional=\"0\">\n  <title>%s</title>  %s\n</select>\n<suspend/>" % (label.strip(), title.strip(), output)
+                printPage = "<select label=\"%s\" optional=\"0\">\n  <title>%s</title>  %s\n</select>\n<suspend/>" % (label.strip(), title.strip(), output)
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print (e)
@@ -784,16 +792,17 @@ class makeTextareaCommand(sublime_plugin.TextCommand):
                   output = "  " + output + "\n"
 
                 if docType == 'FMA':
-                       printPage = "<textarea\n  label=\"%s\"\n  optional=\"0\">\n  <title>%s</title>\n%s</textarea>\n<suspend/>" % (label.strip(), title.strip(), output)
+                       printPage = "<textarea label=\"%s\" optional=\"0\">\n  <title>%s</title>\n%s</textarea>\n<suspend/>" % (label.strip(), title.strip(), output)
                 else :
 
                     #COMPOSE OUR QUESTION
                     if "<comment>" not in input:
                         comment = "<comment>Please be as specific as possible</comment>"
-                        printPage = "<textarea\n  label=\"%s\"\n  optional=\"0\">\n  <title>%s</title>\n  %s\n%s</textarea>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
+                        printPage = "<textarea label=\"%s\" optional=\"0\">\n  <title>%s</title>\n  %s\n%s</textarea>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
                     else:
-                        printPage = "<textarea\n  label=\"%s\"\n  optional=\"0\">\n  <title>%s</title>\n%s</textarea>\n<suspend/>" % (label.strip(), title.strip(), output)
+                        printPage = "<textarea label=\"%s\" optional=\"0\">\n  <title>%s</title>\n%s</textarea>\n<suspend/>" % (label.strip(), title.strip(), output)
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print ("makeTextarea failed")
@@ -831,21 +840,22 @@ class makeTextCommand(sublime_plugin.TextCommand):
                         #COMPOSE OUR QUESTION
                         if "<comment>" not in input:
                             comment = "<comment>Please be as specific as possible</comment>\n"
-                            printPage = "<text\n  label=\"%s\"\n  size=\"40\"\n  optional=\"0\"%s>\n  <title>%s</title>\n  %s  %s\n</text>\n<suspend/>" % (label.strip(), style, title.strip(), comment, output)
+                            printPage = "<text label=\"%s\" size=\"40\" optional=\"0\"%s>\n  <title>%s</title>\n  %s  %s\n</text>\n<suspend/>" % (label.strip(), style, title.strip(), comment, output)
                         else:
-                            printPage = "<text\n  label=\"%s\"\n  size=\"40\"\n  optional=\"0\"%s>\n  <title>%s</title>\n  %s\n</text>\n<suspend/>" % (label.strip(), style, title.strip(), output)
+                            printPage = "<text label=\"%s\" size=\"40\" optional=\"0\"%s>\n  <title>%s</title>\n  %s\n</text>\n<suspend/>" % (label.strip(), style, title.strip(), output)
 
                 elif docType =='FMA':
-                    printPage = "<text\n  label=\"%s\"\n  size=\"40\"\n  optional=\"0\">\n  <title>%s</title>\n%s</text>\n<suspend/>" % (label.strip(), title.strip(), output)
+                    printPage = "<text label=\"%s\" size=\"40\" optional=\"0\">\n  <title>%s</title>\n%s</text>\n<suspend/>" % (label.strip(), title.strip(), output)
 
                 else:
                     if "<comment>" not in input:
                         comment = "<comment>Please be as specific as possible</comment>"
-                        printPage = "<text\n  label=\"%s\"\n  size=\"40\"\n  optional=\"0\">\n  <title>%s</title>\n  %s\n%s</text>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
+                        printPage = "<text label=\"%s\" size=\"40\" optional=\"0\">\n  <title>%s</title>\n  %s\n%s</text>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
                     else:
-                        printPage = "<text\n  label=\"%s\"\n  size=\"40\"\n  optional=\"0\">\n  <title>%s</title>\n%s</text>\n<suspend/>" % (label.strip(), title.strip(), output)
+                        printPage = "<text label=\"%s\" size=\"40\" optional=\"0\">\n  <title>%s</title>\n%s</text>\n<suspend/>" % (label.strip(), title.strip(), output)
 
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print (e)
@@ -871,16 +881,17 @@ class makeNumberCommand(sublime_plugin.TextCommand):
                 if output != "":
                     output = "  " + output + "\n"
                 if docType =='FMA':
-                    printPage = "<number\n  label=\"%s\"\n  size=\"3\"\n  optional=\"0\">\n  <title>%s</title>\n%s</number>\n<suspend/>" % (label.strip(), title.strip(), output)
+                    printPage = "<number label=\"%s\" size=\"3\" optional=\"0\">\n  <title>%s</title>\n%s</number>\n<suspend/>" % (label.strip(), title.strip(), output)
 
                 else:
                     #COMPOSE OUR QUESTION
                     if "<comment>" not in input:
                         comment = "<comment>Please enter a whole number</comment>\n"
-                        printPage = "<number\n  label=\"%s\"\n  size=\"3\"\n  optional=\"0\">\n  <title>%s</title>\n  %s%s</number>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
+                        printPage = "<number label=\"%s\" size=\"3\" optional=\"0\">\n  <title>%s</title>\n  %s%s</number>\n<suspend/>" % (label.strip(), title.strip(), comment, output)
                     else:
-                        printPage = "<number\n  label=\"%s\"\n  size=\"3\"\n  optional=\"0\">\n  <title>%s</title>\n%s</number>\n<suspend/>" % (label.strip(), title.strip(), output)
+                        printPage = "<number label=\"%s\" size=\"3\" optional=\"0\">\n  <title>%s</title>\n%s</number>\n<suspend/>" % (label.strip(), title.strip(), output)
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print (e)
@@ -902,8 +913,9 @@ class makePipeCommand(sublime_plugin.TextCommand):
                 output = input
 
                 # compose our new pipe tag
-                printPage = "<pipe\n  label=\"\"\n  capture=\"\">\n  %s\n</pipe>\n" % (output)
+                printPage = "<pipe label=\"\" capture=\"\">\n  %s\n</pipe>\n" % (output)
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print ('make pipe failed')
@@ -928,7 +940,7 @@ class makeRowCommand(sublime_plugin.TextCommand):
 
                 #CLEAN UP THE EXTRA LINE BREAKS
                 input = re.sub("\n{2,}", "\n", input)
-                input = fixUniCode(input)
+                
 
                 input = input.strip().split("\n")
                 #ebay has a different openSize
@@ -972,7 +984,7 @@ class makeRowrCommand(sublime_plugin.TextCommand):
 
                 #CLEAN UP THE EXTRA LINE BREAKS
                 input = re.sub("\n{2,}", "\n", input)
-                input = fixUniCode(input)
+                
 
                 input = input.strip().split("\n")
                 #ebay has a different openSize
@@ -1011,7 +1023,7 @@ class makeRowsMatchLabelCommand(sublime_plugin.TextCommand):
             for sel in sels:
                 printPage = ''
                 input = self.view.substr(sel).strip()
-                input = fixUniCode(input)
+                
                 #SPLIT UP INTO ROWS
                 input = input.split("\n")
                 #ebay has a different openSize
@@ -1065,7 +1077,7 @@ class makeRowsMatchValuesCommand(sublime_plugin.TextCommand):
             for sel in sels:
                 printPage = ''
                 input = self.view.substr(sel)
-                input = fixUniCode(input)
+                
                 #SPLIT UP INTO ROWS
                 input = input.split("\n")
                 #ebay has a different openSize
@@ -1114,7 +1126,7 @@ class makeColsCommand(sublime_plugin.TextCommand):
                 input = re.sub("\n +\n", "\n\n", input)
                 #CLEAN UP THE EXTRA LINE BREAKS
                 input = re.sub("\n{2,}", "\n", input)
-                input = fixUniCode(input)
+                
                 input = input.strip().split("\n")
                 #start from output = to fill this class
                 for x in range(0,len(input)):
@@ -1149,7 +1161,7 @@ class makeColsMatchLabelCommand(sublime_plugin.TextCommand):
             for sel in sels:
                 printPage = ''
                 input = self.view.substr(sel)
-                input = fixUniCode(input)
+                
                 input = re.sub("\t+", " ", input)
                 #CLEAN UP SPACES
                 input = re.sub("\n +\n", "\n\n", input)
@@ -1206,7 +1218,7 @@ class makeColsMatchValueCommand(sublime_plugin.TextCommand):
                 input = re.sub("\n +\n", "\n\n", input)
                 #CLEAN UP THE EXTRA LINE BREAKS
                 input = re.sub("\n{2,}", "\n", input)
-                input = fixUniCode(input)
+                
                 input = input.strip().split("\n")
 
                 for line in input:
@@ -1246,7 +1258,7 @@ class makeChoicesCommand(sublime_plugin.TextCommand):
             for sel in sels:
                 printPage = ''
                 input = self.view.substr(sel)
-                input = fixUniCode(input)
+                
                 input = input.strip().split("\n")
 
                 for x in range(0,len(input)):
@@ -1268,7 +1280,7 @@ class makeCasesCommand(sublime_plugin.TextCommand):
             for sel in sels:
                 printPage = ''
                 input = self.view.substr(sel)
-                input = fixUniCode(input)
+                
                 while '\n\n' in input:
                     input = input.replace('\n\n', '\n')
                 input = input.strip().split("\n")
@@ -1280,7 +1292,7 @@ class makeCasesCommand(sublime_plugin.TextCommand):
                     printPage += "  <case label=\"r%s\" cond=\"\">%s</case>\n" % (str(count+1), input[count].strip())
                     count += 1
                 printPage += "  <case label=\"r%s\" cond=\"1\">UNDEFINED</case>" % (str(count+1))
-                printPage = "<pipe\n  label=\"\"\n  capture=\"\">\n" + printPage + "\n</pipe>"
+                printPage = "<pipe label=\"\" capture=\"\">\n" + printPage + "\n</pipe>"
             self.view.replace(edit,sel, printPage)
         except Exception as e:
             print (e)
@@ -1294,7 +1306,7 @@ class makeGroupsCommand(sublime_plugin.TextCommand):
             for sel in sels:
                 printPage = ''
                 input = self.view.substr(sel)
-                input = fixUniCode(input)
+                
                 input = input.strip().split("\n")
 
                 for x in range(0,len(input)):
@@ -1319,18 +1331,15 @@ class makeLoopBlockCommand(sublime_plugin.TextCommand):
                 input = re.sub(r'<(radio|checkbox|text|textarea|block|number|float|select|html)(.*) label="([^"]*)"',r'<\1\2 label="\3_[loopvar: label]"', input)
 
                 printPage = """
-<loop
-  label=""
-  vars="">
+<loop label="" vars="">
 
-<block
-  label="">
+<block label="">
 
 %s
 
 </block>
-
 <looprow label="" cond=""><loopvar name=""></loopvar></looprow>
+
 </loop>""" % input
 
                 self.view.replace(edit,sel, printPage)
@@ -1355,6 +1364,16 @@ class makeSwitchCommand(sublime_plugin.TextCommand):
                         that2 = "c"
                     elif "<col" in vrange[i]:
                         this1 = "col"
+                        that1 = "choice"
+                        this2 = "c"
+                        that2 = "ch"
+                    elif "<choice" in vrange[i]:
+                        this1 = "choice"
+                        that1 = "case"
+                        this2 = "ch"
+                        that2 = "c"
+                    elif "<case" in vrange[i]:
+                        this1 = "case"
                         that1 = "row"
                         this2 = "c"
                         that2 = "r"
@@ -1377,10 +1396,11 @@ class makeCommentCommand(sublime_plugin.TextCommand):
             for sel in sels:
                 printPage = ''
                 input = self.view.substr(sel).strip()
-                input = fixUniCode(input)
+                
                 input = input.replace("\n", "<br/>\n")
-                printPage = "<html\n  label=\"\"\n  where=\"survey\">%s</html>" % input
+                printPage = "<html label=\"\" where=\"survey\">%s</html>" % input
 
+                printPage = tidySurveyInput(printPage)
                 self.view.replace(edit,sel, printPage)
         except Exception as e:
             print (e)

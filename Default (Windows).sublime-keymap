@@ -1,13 +1,4 @@
 [
-    { 
-        "keys": ["alt+shift+down"], "command": "lower_case_generator",
-    },
-    { 
-        "keys": ["alt+shift+up"], "command": "upper_case_generator",
-    },
-    { 
-        "keys": ["alt+shift+;"], "command": "list_generator",
-    },
    { 
         "keys": ["ctrl+f1"], "command": "make_survey",
     },
@@ -17,9 +8,6 @@
     },
     { 
         "keys": ["ctrl+shift+r"], "command": "make_rating",
-    },
-    { 
-        "keys": ["ctrl+shift+m"], "command": "max_diff",
     },
     { 
         "keys": ["ctrl+shift+c"], "command": "make_checkbox",
@@ -109,6 +97,14 @@
         "args": 
             {
             "name": "Packages/sublime-clips-master/shortcuts/ItalicText.sublime-snippet"
+        } 
+    },
+    {   
+        "keys": ["alt+c"], 
+        "command": "insert_snippet", 
+        "args": 
+            {
+            "name": "Packages/sublime-clips-master/shortcuts/Comment.sublime-snippet"
         } 
     },
 ]
